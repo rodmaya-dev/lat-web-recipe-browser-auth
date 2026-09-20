@@ -1,3 +1,5 @@
+// client/src/components/App/App.tsx
+
 import { useState, useEffect } from "react";
 import { Routes, Route } from "react-router-dom";
 
@@ -8,6 +10,8 @@ import HomePage from "../../pages/HomePage";
 import FavoritesPage from "../../pages/FavoritesPage";
 import RecipePage from "../../pages/RecipePage";
 import NotFoundPage from "../../pages/NotFoundPage";
+import LoginPage from '../../pages/LoginPage';
+import RegisterPage from '../../pages/RegisterPage';
 import "./App.css";
 
 function App() {
@@ -43,6 +47,8 @@ function App() {
           element={<FavoritesPage recipes={recipes} />}
         />
         <Route path="/recipes/:id" element={<RecipePage recipes={recipes} />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
         <Route path="*" element={<NotFoundPage />} />
       </Route>
     </Routes>

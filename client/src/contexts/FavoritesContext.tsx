@@ -21,6 +21,7 @@ export function FavoritesProvider({ children }: { children: React.ReactNode }) {
     if (newSet.has(id)) {
       newSet.delete(id);
     } else {
+      
       newSet.add(id);
     }
     setFavorites(newSet);
