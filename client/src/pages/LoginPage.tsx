@@ -1,13 +1,28 @@
-import { useFormWithValidation } from '../hooks/useFormWithValidation';
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext";
+import { loginUser } from "../utils/api";
+import { useFormWithValidation } from "../hooks/useFormWithValidation";
 
 export default function LoginPage() {
+  // estado para errores de la API
+  const [submitError, setSubmitError] = useState("");
+  // Inicializa los hooks
   const { values, errors, isValid, handleChange } = useFormWithValidation();
+  const { login } = useAuth();
+  const navigate = useNavigate();
 
-  function handleSubmit(event: React.FormEvent) {
-    event.preventDefault();
-    if (!isValid) return;
-    console.log('Formulario válido, valores:', values);
+async function handleSubmit(event: React.FormEvent) {
+  event.preventDefault();
+  if (!isValid) return;
+  try {
+    const { token, user } = await loginUser(values.email, values.password);
+    login(token, user);
+    navigate("/");
+  } catch (err) {
+    setSubmitError(err instanceof Error ? err.message : "Algo salió mal");
   }
+}
 
   return (
     <form onSubmit={handleSubmit} noValidate className="form">
@@ -60,6 +75,8 @@ export default function LoginPage() {
       >
         Iniciar sesión
       </button>
+      {/* Error de la API */}
+      {submitError && <p className="form__error">{submitError}</p>}
     </form>
   );
 }
