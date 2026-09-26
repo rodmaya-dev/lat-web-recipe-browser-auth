@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Routes, Route } from "react-router-dom";
 
 import type { Recipe } from "../../types";
-import { getRecipes } from "../../utils/api";
+import { getRecipes, toggleLike } from "../../utils/api";
 import AppLayout from "../AppLayout/AppLayout";
 import HomePage from "../../pages/HomePage";
 import FavoritesPage from "../../pages/FavoritesPage";
@@ -16,18 +16,19 @@ import "./App.css";
 
 /**
  * Componente principal de la aplicación
- * 
+ *
  * Responsabilidades:
  * 1. Cargar la lista de recetas al montar
  * 2. Renderizar las rutas protegidas y públicas
  * 3. Gestionar estados de carga y errores
  * 4. Esperar a que AuthProvider verifique el token
+ * 5. Sincronizar los favoritos (likes) con el back end
  */
 function App() {
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
-  const { isLoading: isAuthLoading } = useAuth();
+  const { isLoading: isAuthLoading, currentUser } = useAuth();
 
   /**
    * Cargar recetas cuando la app monta
@@ -46,13 +47,35 @@ function App() {
   }, []);
 
   /**
+   * Alternar el like/favorito de una receta contra el back end
+   *
+   * @param id - _id de la receta cuyo like se va a alternar
+   *
+   * Por qué reemplazamos la receta en el estado en vez de mutarla:
+   * `recipes` es la única fuente de verdad tanto para HomePage como para
+   * FavoritesPage (que deriva su lista filtrando por `likes`). Al sustituir
+   * el objeto completo que devuelve la API, ambas vistas quedan sincronizadas
+   * sin necesidad de un Context adicional.
+   */
+  async function handleToggleFavorite(id: string) {
+    if (!currentUser) return;
+
+    try {
+      const updated = await toggleLike(id, currentUser._id);
+      setRecipes((prev) => prev.map((r) => (r.id === id ? updated : r)));
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  /**
    * Mostrar contenido de la página de inicio
    * Maneja estados de carga, errores y contenido exitoso
    */
   function homeContent() {
     if (isLoading) return <p className="app__loading">Cargando recetas...</p>;
     if (error) return <p className="app__message">No se pudieron cargar las recetas.</p>;
-    return <HomePage recipes={recipes} />;
+    return <HomePage recipes={recipes} onToggleFavorite={handleToggleFavorite} />;
   }
 
   /**
@@ -70,9 +93,14 @@ function App() {
         {/* Rutas protegidas: solo usuarios autenticados */}
         <Route element={<ProtectedRoute />}>
           <Route path="/" element={homeContent()} />
-          <Route 
-            path="/favorites" 
-            element={<FavoritesPage recipes={recipes} />} 
+          <Route
+            path="/favorites"
+            element={
+              <FavoritesPage
+                recipes={recipes}
+                onToggleFavorite={handleToggleFavorite}
+              />
+            }
           />
           <Route 
             path="/recipes/:id" 

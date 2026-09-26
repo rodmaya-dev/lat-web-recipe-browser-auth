@@ -4,7 +4,6 @@ import { BrowserRouter } from 'react-router-dom';
 
 import './index.css';
 import App from './components/App/App';
-import { FavoritesProvider } from './contexts/FavoritesContext';
 import { AuthProvider } from './contexts/AuthContext';
 
 const rootElement = document.getElementById('root');
@@ -14,9 +13,7 @@ createRoot(rootElement).render(
   <StrictMode>
     <BrowserRouter>
       <AuthProvider>
-        <FavoritesProvider>
-          <App />
-        </FavoritesProvider>
+        <App />
       </AuthProvider>
     </BrowserRouter>
   </StrictMode>,
